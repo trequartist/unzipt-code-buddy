@@ -12,6 +12,7 @@ export interface WorkflowStep {
 
 export interface WorkflowStage {
   id: string;
+  stepId: string; // Maps to the timeline step.id
   title: string;
   description: string;
   type: StageType;
@@ -66,6 +67,7 @@ export interface WorkflowState {
 const blogWorkflowStages: WorkflowStage[] = [
   {
     id: "input",
+    stepId: "input",
     title: "What would you like to write about?",
     description: "Share your topic, key ideas, or upload supporting documents",
     type: "input",
@@ -80,6 +82,7 @@ const blogWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "research",
+    stepId: "research",
     title: "Researching your topic...",
     description: "Our AI is gathering relevant information and analyzing trends",
     type: "processing",
@@ -91,6 +94,7 @@ const blogWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "topics",
+    stepId: "topics",
     title: "Choose your angle",
     description: "Select the topic angle that best fits your goals",
     type: "selection",
@@ -123,6 +127,7 @@ const blogWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "brief-generation",
+    stepId: "brief",
     title: "Creating your content brief...",
     description: "Building a structured outline and research brief",
     type: "processing",
@@ -134,6 +139,7 @@ const blogWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "brief-approval",
+    stepId: "brief",
     title: "Review your content brief",
     description: "Approve or request changes to the outline",
     type: "approval",
@@ -145,6 +151,7 @@ const blogWorkflowStages: WorkflowStage[] = [
 const linkedinWorkflowStages: WorkflowStage[] = [
   {
     id: "input",
+    stepId: "input",
     title: "What's your LinkedIn post about?",
     description: "Share your message, insight, or announcement",
     type: "input",
@@ -157,6 +164,7 @@ const linkedinWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "enhancement",
+    stepId: "enhance",
     title: "Enhancing your post...",
     description: "Optimizing for engagement and adding hooks",
     type: "processing",
@@ -168,6 +176,7 @@ const linkedinWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "tone-selection",
+    stepId: "tone",
     title: "Choose your tone",
     description: "Select the voice that matches your brand",
     type: "selection",
@@ -195,6 +204,7 @@ const linkedinWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "post-generation",
+    stepId: "generate",
     title: "Generating your post...",
     description: "Creating optimized content for LinkedIn",
     type: "processing",
@@ -209,6 +219,7 @@ const linkedinWorkflowStages: WorkflowStage[] = [
 const calendarWorkflowStages: WorkflowStage[] = [
   {
     id: "calendar-selection",
+    stepId: "select",
     title: "Select from your content calendar",
     description: "Choose a scheduled topic to create content for",
     type: "selection",
@@ -236,6 +247,7 @@ const calendarWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "research",
+    stepId: "prepare",
     title: "Preparing your content...",
     description: "Gathering context and related materials",
     type: "processing",
@@ -247,6 +259,7 @@ const calendarWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "input",
+    stepId: "input",
     title: "Add additional context",
     description: "Include any specific points or requirements",
     type: "input",
@@ -260,6 +273,7 @@ const calendarWorkflowStages: WorkflowStage[] = [
   },
   {
     id: "brief-generation",
+    stepId: "brief",
     title: "Creating your content brief...",
     description: "Building outline based on calendar event",
     type: "processing",
@@ -332,13 +346,26 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   nextStage: () => {
-    const { currentStageIndex, stages } = get();
+    const { currentStageIndex, stages, steps } = get();
     if (currentStageIndex < stages.length - 1) {
       const nextIndex = currentStageIndex + 1;
-      set({ currentStageIndex: nextIndex });
+      const currentStage = stages[currentStageIndex];
+      const nextStage = stages[nextIndex];
+      
+      // Update step statuses based on stepId mapping
+      const updatedSteps = [...steps];
+      const currentStepIndex = steps.findIndex(s => s.id === currentStage.stepId);
+      const nextStepIndex = steps.findIndex(s => s.id === nextStage.stepId);
+      
+      // Only mark current step as complete if moving to a DIFFERENT step
+      if (nextStepIndex !== currentStepIndex && currentStepIndex !== -1 && nextStepIndex !== -1) {
+        updatedSteps[currentStepIndex].status = "completed";
+        updatedSteps[nextStepIndex].status = "in-progress";
+      }
+      
+      set({ currentStageIndex: nextIndex, steps: updatedSteps });
       
       // Auto-start processing stages
-      const nextStage = stages[nextIndex];
       if (nextStage.type === "processing") {
         setTimeout(() => get().completeStage(), 100);
       }
@@ -346,9 +373,24 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   previousStage: () => {
-    const { currentStageIndex } = get();
+    const { currentStageIndex, stages, steps } = get();
     if (currentStageIndex > 0) {
-      set({ currentStageIndex: currentStageIndex - 1 });
+      const prevIndex = currentStageIndex - 1;
+      const currentStage = stages[currentStageIndex];
+      const prevStage = stages[prevIndex];
+      
+      // Update step statuses based on stepId mapping
+      const updatedSteps = [...steps];
+      const currentStepIndex = steps.findIndex(s => s.id === currentStage.stepId);
+      const prevStepIndex = steps.findIndex(s => s.id === prevStage.stepId);
+      
+      // Only update step status if moving to a DIFFERENT step
+      if (prevStepIndex !== currentStepIndex && currentStepIndex !== -1 && prevStepIndex !== -1) {
+        updatedSteps[currentStepIndex].status = "pending";
+        updatedSteps[prevStepIndex].status = "in-progress";
+      }
+      
+      set({ currentStageIndex: prevIndex, steps: updatedSteps });
     }
   },
 
@@ -371,16 +413,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   completeStage: () => {
-    const { currentStageIndex, steps, stages } = get();
-    const updatedSteps = [...steps];
-    
-    if (currentStageIndex < steps.length - 1) {
-      updatedSteps[currentStageIndex].status = "completed";
-      updatedSteps[currentStageIndex + 1].status = "in-progress";
-    }
+    const { currentStageIndex, stages } = get();
+    const currentStage = stages[currentStageIndex];
 
     // Simulate processing for processing stages
-    const currentStage = stages[currentStageIndex];
     if (currentStage.type === "processing") {
       const interval = setInterval(() => {
         const stage = get().stages[currentStageIndex];
@@ -396,8 +432,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     } else {
       get().nextStage();
     }
-
-    set({ steps: updatedSteps });
   },
 
   insertIntoInput: (content, position) => {
