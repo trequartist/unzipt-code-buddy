@@ -63,23 +63,25 @@ export function WorkflowContainer({ children }: WorkflowContainerProps) {
           {/* Stage Content Card */}
           <StageCard className="min-h-[500px]">
           <div className="space-y-6">
-            {/* Stage Header */}
-            <div className="space-y-3">
-              <h2 className="text-display font-bold">{currentStage.title}</h2>
-              <p className="text-body text-muted-foreground">
-                {currentStage.description}
-              </p>
-            </div>
+            {/* Stage Header - Hide for input stages */}
+            {currentStage.type !== "input" && (
+              <div className="space-y-3">
+                <h2 className="text-display font-bold">{currentStage.title}</h2>
+                <p className="text-body text-muted-foreground">
+                  {currentStage.description}
+                </p>
+              </div>
+            )}
 
             {/* Input Stage - User provides input via Assistant Panel */}
             {currentStage.type === "input" && (
-              <div className="pt-8 pb-12 flex flex-col items-center justify-center min-h-[400px]">
-                <div className="max-w-md text-center space-y-6">
+              <div className="pt-20 pb-12 flex flex-col items-center justify-center min-h-[400px]">
+                <div className="max-w-md text-center space-y-8">
                   <div className="relative inline-flex">
                     <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-xl" />
-                    <div className="relative bg-primary/10 p-6 rounded-full">
+                    <div className="relative bg-primary/10 p-8 rounded-full">
                       <svg
-                        className="h-16 w-16 text-primary"
+                        className="h-20 w-20 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -94,38 +96,11 @@ export function WorkflowContainer({ children }: WorkflowContainerProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold">Ready to create?</h3>
-                    <p className="text-muted-foreground">
-                      Use the <span className="font-semibold text-foreground">ContentQ AI Assistant</span> on the right to share your topic, ideas, or upload supporting documents.
+                  <div className="space-y-2">
+                    <p className="text-lg text-muted-foreground">
+                      Use the <span className="font-semibold text-foreground">AI Assistant →</span>
                     </p>
                   </div>
-                  
-                  <Card className="p-4 bg-primary/5 border-primary/20">
-                    <div className="flex items-start gap-3 text-left">
-                      <div className="mt-0.5">
-                        <svg
-                          className="h-5 w-5 text-primary"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="flex-1 space-y-1 text-sm">
-                        <p className="font-medium">Type your content idea in the Chat tab</p>
-                        <p className="text-xs text-muted-foreground">
-                          Or use the Context tab to upload reference documents
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
                 </div>
               </div>
             )}
