@@ -183,7 +183,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   nextStage: () => {
     const { currentStageIndex, stages } = get();
     if (currentStageIndex < stages.length - 1) {
-      set({ currentStageIndex: currentStageIndex + 1 });
+      const nextIndex = currentStageIndex + 1;
+      set({ currentStageIndex: nextIndex });
+      
+      // Auto-start processing stages
+      const nextStage = stages[nextIndex];
+      if (nextStage.type === "processing") {
+        setTimeout(() => get().completeStage(), 100);
+      }
     }
   },
 
