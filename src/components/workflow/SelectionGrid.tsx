@@ -41,27 +41,32 @@ export function SelectionGrid({
           <Card
             key={option.id}
             className={cn(
-              "group relative cursor-pointer p-6 transition-all duration-200",
+              "group relative cursor-pointer p-6 transition-all duration-300 hover:shadow-xl",
               isSelected
-                ? "border-primary bg-primary/5 shadow-md"
-                : "hover:-translate-y-1"
+                ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                : "hover:-translate-y-1 hover:border-primary/50"
             )}
             onClick={() => handleSelect(option.id)}
           >
             {/* Selection Indicator */}
             <div
               className={cn(
-                "absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-200",
+                "absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-300",
                 isSelected
-                  ? "border-primary bg-primary"
-                  : "border-border bg-background"
+                  ? "border-primary bg-primary scale-110 shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                  : "border-border bg-background group-hover:border-primary/50 group-hover:scale-105"
               )}
             >
               {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
             </div>
 
             <div className="space-y-2 pr-8">
-              <h3 className="text-subheading">{option.title}</h3>
+              <h3 className={cn(
+                "text-subheading transition-colors duration-300",
+                isSelected ? "text-primary" : "group-hover:text-primary"
+              )}>
+                {option.title}
+              </h3>
               <p className="text-small text-muted-foreground">
                 {option.description}
               </p>

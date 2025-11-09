@@ -141,6 +141,135 @@ const blogWorkflowStages: WorkflowStage[] = [
   },
 ];
 
+const linkedinWorkflowStages: WorkflowStage[] = [
+  {
+    id: "input",
+    title: "What's your LinkedIn post about?",
+    description: "Share your message, insight, or announcement",
+    type: "input",
+    canGoBack: false,
+    primaryAction: "Continue",
+    inputLabel: "Your Message",
+    placeholder: "e.g., 'Just launched our new AI feature that helps teams save 10 hours per week'",
+    inputValue: "",
+    allowFileUpload: false,
+  },
+  {
+    id: "enhancement",
+    title: "Enhancing your post...",
+    description: "Optimizing for engagement and adding hooks",
+    type: "processing",
+    canGoBack: false,
+    primaryAction: "Continue",
+    processingStage: "Enhancement",
+    progress: 0,
+    message: "Crafting compelling hooks and hashtags...",
+  },
+  {
+    id: "tone-selection",
+    title: "Choose your tone",
+    description: "Select the voice that matches your brand",
+    type: "selection",
+    canGoBack: true,
+    primaryAction: "Continue",
+    multiSelect: false,
+    options: [
+      {
+        id: "professional",
+        title: "Professional & Authoritative",
+        description: "Establish thought leadership with a formal, expert tone",
+      },
+      {
+        id: "conversational",
+        title: "Conversational & Friendly",
+        description: "Build connections with an approachable, relatable voice",
+      },
+      {
+        id: "inspiring",
+        title: "Inspiring & Motivational",
+        description: "Energize your audience with uplifting, action-oriented language",
+      },
+    ],
+    selectedOptions: [],
+  },
+  {
+    id: "post-generation",
+    title: "Generating your post...",
+    description: "Creating optimized content for LinkedIn",
+    type: "processing",
+    canGoBack: false,
+    primaryAction: "Continue",
+    processingStage: "Generation",
+    progress: 0,
+    message: "Finalizing your LinkedIn post...",
+  },
+];
+
+const calendarWorkflowStages: WorkflowStage[] = [
+  {
+    id: "calendar-selection",
+    title: "Select from your content calendar",
+    description: "Choose a scheduled topic to create content for",
+    type: "selection",
+    canGoBack: false,
+    primaryAction: "Continue",
+    multiSelect: false,
+    options: [
+      {
+        id: "event1",
+        title: "Product Launch Announcement",
+        description: "Scheduled for tomorrow • Blog post about new features",
+      },
+      {
+        id: "event2",
+        title: "Industry Trends Report",
+        description: "Due in 3 days • Analysis of Q1 2025 market shifts",
+      },
+      {
+        id: "event3",
+        title: "Customer Success Story",
+        description: "Due next week • Case study with Acme Corp",
+      },
+    ],
+    selectedOptions: [],
+  },
+  {
+    id: "research",
+    title: "Preparing your content...",
+    description: "Gathering context and related materials",
+    type: "processing",
+    canGoBack: false,
+    primaryAction: "Continue",
+    processingStage: "Preparation",
+    progress: 0,
+    message: "Loading calendar details and references...",
+  },
+  {
+    id: "input",
+    title: "Add additional context",
+    description: "Include any specific points or requirements",
+    type: "input",
+    canGoBack: true,
+    primaryAction: "Continue",
+    inputLabel: "Additional Details",
+    placeholder: "e.g., 'Emphasize the 50% performance improvement and include customer quotes'",
+    inputValue: "",
+    allowFileUpload: true,
+    acceptedFiles: ".pdf,.doc,.docx,.txt",
+  },
+  {
+    id: "brief-generation",
+    title: "Creating your content brief...",
+    description: "Building outline based on calendar event",
+    type: "processing",
+    canGoBack: false,
+    primaryAction: "Continue",
+    processingStage: "Brief Generation",
+    progress: 0,
+    message: "Structuring your content...",
+  },
+];
+
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   isActive: false,
   workflowType: null,
@@ -152,14 +281,35 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   brief: null,
 
   startWorkflow: (type) => {
-    const stages = type === "blog" ? blogWorkflowStages : [];
-    const steps: WorkflowStep[] = [
-      { id: "input", name: "Input", status: "in-progress" },
-      { id: "research", name: "Research", status: "pending" },
-      { id: "topics", name: "Topics", status: "pending" },
-      { id: "brief", name: "Brief", status: "pending" },
-      { id: "content", name: "Content", status: "pending" },
-    ];
+    let stages: WorkflowStage[] = [];
+    let steps: WorkflowStep[] = [];
+
+    if (type === "blog") {
+      stages = blogWorkflowStages;
+      steps = [
+        { id: "input", name: "Input", status: "in-progress" },
+        { id: "research", name: "Research", status: "pending" },
+        { id: "topics", name: "Topics", status: "pending" },
+        { id: "brief", name: "Brief", status: "pending" },
+        { id: "content", name: "Content", status: "pending" },
+      ];
+    } else if (type === "linkedin") {
+      stages = linkedinWorkflowStages;
+      steps = [
+        { id: "input", name: "Input", status: "in-progress" },
+        { id: "enhance", name: "Enhance", status: "pending" },
+        { id: "tone", name: "Tone", status: "pending" },
+        { id: "generate", name: "Generate", status: "pending" },
+      ];
+    } else if (type === "calendar") {
+      stages = calendarWorkflowStages;
+      steps = [
+        { id: "select", name: "Select", status: "in-progress" },
+        { id: "prepare", name: "Prepare", status: "pending" },
+        { id: "input", name: "Input", status: "pending" },
+        { id: "brief", name: "Brief", status: "pending" },
+      ];
+    }
 
     set({
       isActive: true,
