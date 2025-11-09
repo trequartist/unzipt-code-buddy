@@ -4,16 +4,15 @@ import { WorkflowStep } from "@/stores/workflowStore";
 
 interface VerticalTimelineProps {
   steps: WorkflowStep[];
-  currentIndex: number;
 }
 
-export function VerticalTimeline({ steps, currentIndex }: VerticalTimelineProps) {
+export function VerticalTimeline({ steps }: VerticalTimelineProps) {
   return (
     <div className="fixed left-0 top-[60px] h-[calc(100vh-60px)] w-[240px] border-r border-border bg-muted/30 p-6">
       <div className="space-y-8">
         {steps.map((step, index) => {
           const isCompleted = step.status === "completed";
-          const isCurrent = index === currentIndex;
+          const isCurrent = step.status === "in-progress";
           const isPending = step.status === "pending";
 
           return (

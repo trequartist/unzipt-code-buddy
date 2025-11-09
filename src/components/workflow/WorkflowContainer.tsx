@@ -50,7 +50,7 @@ export function WorkflowContainer({ children }: WorkflowContainerProps) {
   return (
     <div className="flex min-h-[calc(100vh-60px)]">
       {/* Vertical Timeline - Fixed Left Sidebar */}
-      <VerticalTimeline steps={steps} currentIndex={currentStageIndex} />
+      <VerticalTimeline steps={steps} />
 
       {/* Main Content Area - Offset for timeline */}
       <div className="ml-[240px] flex flex-1 animate-fade-in">
