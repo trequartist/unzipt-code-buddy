@@ -1,12 +1,22 @@
 import { useState, useCallback } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { optimizeImage, formatFileSize, isImageFile } from "@/utils/imageOptimizer";
 
+interface ImageData {
+  url: string;
+  alt: string;
+  caption: string;
+}
+
 interface ImageUploadZoneProps {
-  onImageInsert: (imageUrl: string) => void;
+  onImageInsert: (imageData: ImageData) => void;
 }
 
 export function ImageUploadZone({ onImageInsert }: ImageUploadZoneProps) {
@@ -14,6 +24,9 @@ export function ImageUploadZone({ onImageInsert }: ImageUploadZoneProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
+  const [altText, setAltText] = useState("");
+  const [caption, setCaption] = useState("");
+  const [showAccessibilityWarning, setShowAccessibilityWarning] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -95,32 +108,99 @@ export function ImageUploadZone({ onImageInsert }: ImageUploadZoneProps) {
 
   const handleInsert = () => {
     if (preview) {
-      onImageInsert(preview);
+      if (!altText.trim()) {
+        setShowAccessibilityWarning(true);
+        return;
+      }
+      
+      onImageInsert({
+        url: preview,
+        alt: altText.trim(),
+        caption: caption.trim(),
+      });
+      
+      // Reset state
       setPreview(null);
-      toast.success("Image inserted into editor");
+      setAltText("");
+      setCaption("");
+      setShowAccessibilityWarning(false);
+      toast.success("Image inserted with accessibility details");
     }
   };
 
   const handleCancel = () => {
     setPreview(null);
+    setAltText("");
+    setCaption("");
+    setShowAccessibilityWarning(false);
   };
 
   if (preview) {
     return (
-      <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+      <div className="space-y-4 rounded-lg border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Image Preview</span>
+          <span className="text-sm font-medium">Configure Image</span>
           <Button variant="ghost" size="sm" onClick={handleCancel}>
             <X className="h-4 w-4" />
           </Button>
         </div>
+        
         <div className="relative rounded-lg overflow-hidden border border-border">
           <img
             src={preview}
-            alt="Preview"
+            alt={altText || "Preview"}
             className="w-full h-auto max-h-64 object-contain bg-muted"
           />
         </div>
+
+        {showAccessibilityWarning && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Alt text is required for accessibility. Please describe what's in the image.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label htmlFor="alt-text" className="flex items-center gap-2">
+              Alt Text <span className="text-xs text-destructive">*Required</span>
+            </Label>
+            <Input
+              id="alt-text"
+              placeholder="Describe the image for screen readers..."
+              value={altText}
+              onChange={(e) => {
+                setAltText(e.target.value);
+                setShowAccessibilityWarning(false);
+              }}
+              maxLength={150}
+              className={showAccessibilityWarning ? "border-destructive" : ""}
+            />
+            <p className="text-xs text-muted-foreground">
+              {altText.length}/150 characters - Describe what's in the image
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="caption">
+              Caption <span className="text-xs text-muted-foreground">(Optional)</span>
+            </Label>
+            <Textarea
+              id="caption"
+              placeholder="Add a caption or additional context..."
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              maxLength={300}
+              rows={2}
+            />
+            <p className="text-xs text-muted-foreground">
+              {caption.length}/300 characters
+            </p>
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <Button onClick={handleInsert} className="flex-1">
             <ImageIcon className="mr-2 h-4 w-4" />

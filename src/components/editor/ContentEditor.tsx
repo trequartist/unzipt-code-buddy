@@ -24,7 +24,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useWorkflowStore } from "@/stores/workflowStore";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ImageUploadZone } from "./ImageUploadZone";
+import { ImageEditDialog } from "./ImageEditDialog";
 import {
   Dialog,
   DialogContent,
@@ -36,12 +38,14 @@ import {
 
 export function ContentEditor() {
   const { editorTitle, editorContent, updateEditorTitle, updateEditorContent } = useWorkflowStore();
-  const { toast } = useToast();
+  const { toast: showToast } = useToast();
   const [isSaved, setIsSaved] = useState(true);
   const [content, setContent] = useState(editorContent || "");
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Update word and character counts
@@ -58,14 +62,14 @@ export function ContentEditor() {
       const timer = setTimeout(() => {
         updateEditorContent(content);
         setIsSaved(true);
-        toast({
+        showToast({
           title: "Auto-saved",
           description: "Your content has been saved",
         });
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isSaved, content, updateEditorContent, toast]);
+  }, [isSaved, content, updateEditorContent, showToast]);
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -120,34 +124,59 @@ export function ContentEditor() {
     a.click();
     URL.revokeObjectURL(url);
 
-    toast({
+    showToast({
       title: "Exported successfully",
       description: `Content exported as ${format.toUpperCase()}`,
     });
   };
 
   const handleAICommand = (command: string) => {
-    toast({
+    showToast({
       title: "AI Feature",
       description: `${command} - Coming soon with AI integration`,
     });
   };
 
-  const handleImageInsert = (imageUrl: string) => {
-    const img = `<img src="${imageUrl}" alt="Uploaded image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0;" />`;
+  const handleImageInsert = (imageData: { url: string; alt: string; caption: string }) => {
+    let html: string;
+    
+    if (imageData.caption) {
+      // Use semantic figure element with caption
+      html = `
+        <figure style="margin: 24px 0; text-align: center;">
+          <img 
+            src="${imageData.url}" 
+            alt="${imageData.alt}" 
+            style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" 
+          />
+          <figcaption style="margin-top: 8px; font-size: 0.875rem; color: hsl(var(--muted-foreground)); font-style: italic;">
+            ${imageData.caption}
+          </figcaption>
+        </figure>
+      `;
+    } else {
+      // Just the image with alt text
+      html = `
+        <img 
+          src="${imageData.url}" 
+          alt="${imageData.alt}" 
+          style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" 
+        />
+      `;
+    }
     
     if (editorRef.current) {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        const imgElement = document.createElement('div');
-        imgElement.innerHTML = img;
-        range.insertNode(imgElement.firstChild!);
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        range.insertNode(container.firstChild!);
         range.collapse(false);
         selection.removeAllRanges();
         selection.addRange(range);
       } else {
-        editorRef.current.innerHTML += img;
+        editorRef.current.innerHTML += html;
       }
       
       handleContentChange(editorRef.current.innerHTML);
@@ -171,6 +200,82 @@ export function ContentEditor() {
     if (imageFile) {
       setShowImageDialog(true);
     }
+  };
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      e.preventDefault();
+      setSelectedImage(target as HTMLImageElement);
+      setShowEditDialog(true);
+    }
+  };
+
+  const handleImageEdit = (alt: string, caption: string) => {
+    if (!selectedImage || !editorRef.current) return;
+
+    const figure = selectedImage.closest("figure");
+    
+    if (caption) {
+      // Create or update figure with caption
+      if (figure) {
+        // Update existing figure
+        selectedImage.alt = alt;
+        const figcaption = figure.querySelector("figcaption");
+        if (figcaption) {
+          figcaption.textContent = caption;
+        } else {
+          const newCaption = document.createElement("figcaption");
+          newCaption.textContent = caption;
+          newCaption.style.cssText = "margin-top: 8px; font-size: 0.875rem; color: hsl(var(--muted-foreground)); font-style: italic;";
+          figure.appendChild(newCaption);
+        }
+      } else {
+        // Wrap image in figure
+        const newFigure = document.createElement("figure");
+        newFigure.style.cssText = "margin: 24px 0; text-align: center;";
+        
+        const parent = selectedImage.parentNode;
+        if (parent) {
+          parent.insertBefore(newFigure, selectedImage);
+          newFigure.appendChild(selectedImage);
+          
+          const figcaption = document.createElement("figcaption");
+          figcaption.textContent = caption;
+          figcaption.style.cssText = "margin-top: 8px; font-size: 0.875rem; color: hsl(var(--muted-foreground)); font-style: italic;";
+          newFigure.appendChild(figcaption);
+        }
+        selectedImage.alt = alt;
+      }
+    } else {
+      // Remove caption if exists
+      selectedImage.alt = alt;
+      if (figure) {
+        const parent = figure.parentNode;
+        if (parent) {
+          parent.insertBefore(selectedImage, figure);
+          parent.removeChild(figure);
+        }
+      }
+    }
+    
+    handleContentChange(editorRef.current.innerHTML);
+    toast.success("Image details updated");
+  };
+
+  const handleImageDelete = () => {
+    if (!selectedImage || !editorRef.current) return;
+
+    const figure = selectedImage.closest("figure");
+    if (figure) {
+      figure.remove();
+    } else {
+      selectedImage.remove();
+    }
+    
+    handleContentChange(editorRef.current.innerHTML);
+    setShowEditDialog(false);
+    toast.success("Image removed");
   };
 
   return (
@@ -358,9 +463,19 @@ export function ContentEditor() {
           onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
           onDragOver={handleEditorDragOver}
           onDrop={handleEditorDrop}
+          onClick={handleImageClick}
           suppressContentEditableWarning
         />
       </div>
+
+      {/* Image Edit Dialog */}
+      <ImageEditDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        imageElement={selectedImage}
+        onSave={handleImageEdit}
+        onDelete={handleImageDelete}
+      />
 
       {/* Action Bar */}
       <div className="sticky bottom-0 flex items-center justify-between border-t border-border bg-background/95 py-4 backdrop-blur">
@@ -370,7 +485,7 @@ export function ContentEditor() {
             size="sm"
             onClick={() => {
               setIsSaved(true);
-              toast({ title: "Draft saved" });
+              showToast({ title: "Draft saved" });
             }}
           >
             <Save className="mr-2 h-4 w-4" />
