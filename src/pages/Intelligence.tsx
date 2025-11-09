@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,7 @@ import {
   Calendar,
   Download,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MetricCard {
   title: string;
@@ -69,8 +70,14 @@ interface ContentPerformance {
 }
 
 export default function Intelligence() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const activeView = searchParams.get("view") || "overview";
   const [timePeriod, setTimePeriod] = useState("30d");
-  const [activeTab, setActiveTab] = useState("overview");
+
+  const setActiveView = (view: string) => {
+    navigate(`/intelligence?view=${view}`, { replace: true });
+  };
 
   // Mock data
   const metrics: MetricCard[] = [
@@ -232,10 +239,17 @@ export default function Intelligence() {
     }
   };
 
+  const navItems = [
+    { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "performance", label: "Performance", icon: TrendingUp },
+    { id: "insights", label: "AI Insights", icon: Sparkles },
+    { id: "trends", label: "Trends", icon: Target },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-scale-in">
         <div>
           <h1 className="text-4xl font-bold mb-2">Intelligence</h1>
           <p className="text-muted-foreground">
@@ -255,7 +269,7 @@ export default function Intelligence() {
               <SelectItem value="12m">Last 12 months</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 hover-scale">
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -264,8 +278,12 @@ export default function Intelligence() {
 
       {/* Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((metric) => (
-          <Card key={metric.title} className="p-6">
+        {metrics.map((metric, index) => (
+          <Card
+            key={metric.title}
+            className="p-6 hover:shadow-lg transition-all hover-scale cursor-pointer animate-scale-in"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
             <div className="flex items-center justify-between mb-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 {metric.icon}
@@ -288,32 +306,33 @@ export default function Intelligence() {
         ))}
       </div>
 
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Performance
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            AI Insights
-          </TabsTrigger>
-          <TabsTrigger value="trends" className="gap-2">
-            <Target className="h-4 w-4" />
-            Trends
-          </TabsTrigger>
-        </TabsList>
+      {/* Navigation Tabs */}
+      <div className="flex gap-2 border-b border-border">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveView(item.id)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all",
+              "hover:bg-accent hover:text-accent-foreground",
+              "border-b-2 -mb-px",
+              activeView === item.id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
+      {/* Overview Tab */}
+      {activeView === "overview" && (
+        <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Engagement Trends */}
-            <Card className="p-6">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
               <h3 className="text-lg font-semibold mb-4">Engagement Trends</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={engagementData}>
@@ -357,7 +376,7 @@ export default function Intelligence() {
             </Card>
 
             {/* Content Type Distribution */}
-            <Card className="p-6">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
               <h3 className="text-lg font-semibold mb-4">Content Distribution</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -388,7 +407,7 @@ export default function Intelligence() {
           </div>
 
           {/* Conversion Funnel */}
-          <Card className="p-6">
+          <Card className="p-6 hover:shadow-lg transition-shadow">
             <h3 className="text-lg font-semibold mb-4">Conversion Funnel</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={engagementData}>
@@ -409,14 +428,16 @@ export default function Intelligence() {
               </BarChart>
             </ResponsiveContainer>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-6">
-          <Card className="p-6">
+      {/* Performance Tab */}
+      {activeView === "performance" && (
+        <div className="space-y-6 animate-fade-in">
+          <Card className="p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Top Performing Content</h3>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="hover-scale">
                 View All
               </Button>
             </div>
@@ -434,7 +455,7 @@ export default function Intelligence() {
               </TableHeader>
               <TableBody>
                 {topPerformers.map((content) => (
-                  <TableRow key={content.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableRow key={content.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">{content.title}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{content.type}</Badge>
@@ -455,13 +476,19 @@ export default function Intelligence() {
               </TableBody>
             </Table>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* AI Insights Tab */}
-        <TabsContent value="insights" className="space-y-6">
+      {/* AI Insights Tab */}
+      {activeView === "insights" && (
+        <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {aiInsights.map((insight) => (
-              <Card key={insight.id} className="p-6">
+            {aiInsights.map((insight, index) => (
+              <Card
+                key={insight.id}
+                className="p-6 hover:shadow-lg transition-all hover-scale cursor-pointer animate-scale-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
                     {getInsightIcon(insight.type)}
@@ -471,7 +498,7 @@ export default function Intelligence() {
                     <p className="text-sm text-muted-foreground mb-4">
                       {insight.description}
                     </p>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 hover-scale">
                       <Sparkles className="h-3 w-3" />
                       {insight.action}
                     </Button>
@@ -482,7 +509,7 @@ export default function Intelligence() {
           </div>
 
           {/* AI Summary */}
-          <Card className="p-6 bg-primary/5 border-primary/20">
+          <Card className="p-6 bg-primary/5 border-primary/20 hover:shadow-lg transition-shadow">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/20 shrink-0">
                 <Sparkles className="h-6 w-6 text-primary" />
@@ -497,24 +524,25 @@ export default function Intelligence() {
                   engagement trend.
                 </p>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    View Recommendations
+                  <Button variant="outline" size="sm" className="hover-scale">
+                    Generate Report
                   </Button>
-                  <Button size="sm" className="gap-2">
-                    <Sparkles className="h-3 w-3" />
-                    Generate Action Plan
+                  <Button variant="outline" size="sm" className="hover-scale">
+                    View Recommendations
                   </Button>
                 </div>
               </div>
             </div>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Trends Tab */}
-        <TabsContent value="trends" className="space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Engagement Rate Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
+      {/* Trends Tab */}
+      {activeView === "trends" && (
+        <div className="space-y-6 animate-fade-in">
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-semibold mb-4">Growth Trends</h3>
+            <ResponsiveContainer width="100%" height={400}>
               <LineChart data={engagementData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
@@ -529,52 +557,30 @@ export default function Intelligence() {
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey="engagement"
+                  dataKey="views"
                   stroke="hsl(var(--primary))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                  activeDot={{ r: 6 }}
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--primary))" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="engagement"
+                  stroke="hsl(var(--info))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--info))" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="conversions"
+                  stroke="hsl(var(--success))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--success))" }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Eye className="h-5 w-5 text-primary" />
-                <h4 className="font-semibold">View Trends</h4>
-              </div>
-              <p className="text-3xl font-bold mb-2">+47%</p>
-              <p className="text-sm text-muted-foreground">
-                Steady growth in page views over the past month
-              </p>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Heart className="h-5 w-5 text-info" />
-                <h4 className="font-semibold">Engagement Trends</h4>
-              </div>
-              <p className="text-3xl font-bold mb-2">+23%</p>
-              <p className="text-sm text-muted-foreground">
-                Higher engagement rates across all content types
-              </p>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Share2 className="h-5 w-5 text-success" />
-                <h4 className="font-semibold">Share Trends</h4>
-              </div>
-              <p className="text-3xl font-bold mb-2">+89%</p>
-              <p className="text-sm text-muted-foreground">
-                Significant increase in social shares and distribution
-              </p>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

@@ -230,14 +230,14 @@ export default function Hub() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-scale-in">
         <div>
           <h1 className="text-4xl font-bold mb-2">Content Hub</h1>
           <p className="text-muted-foreground">
             Manage, organize, and search your content library
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2 hover-scale">
           <FileText className="h-4 w-4" />
           New Content
         </Button>
@@ -354,10 +354,11 @@ export default function Hub() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {folders.map((folder) => (
+          {folders.map((folder, index) => (
             <Card
               key={folder.id}
-              className="p-4 cursor-pointer hover:shadow-md transition-all"
+              className="p-4 cursor-pointer hover:shadow-md transition-all hover-scale animate-scale-in"
+              style={{ animationDelay: `${index * 30}ms` }}
               onClick={() => setFilterFolder(folder.name)}
             >
               <div className="flex items-center gap-3">

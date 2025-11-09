@@ -86,12 +86,13 @@ export default function Create() {
       <section className="space-y-4">
         <h2 className="text-label text-muted-foreground">START NEW</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {workflows.map((workflow) => {
+          {workflows.map((workflow, index) => {
             const Icon = workflow.icon;
             return (
               <Card
                 key={workflow.id}
-                className="group cursor-pointer transition-all duration-200 hover:-translate-y-1"
+                className="group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg animate-scale-in"
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => startWorkflow(workflow.id as "blog" | "linkedin" | "calendar")}
               >
                 <CardHeader className="space-y-3">
@@ -130,10 +131,11 @@ export default function Create() {
         <section className="space-y-4">
           <h2 className="text-label text-muted-foreground">CONTINUE WORKING</h2>
           <div className="space-y-3">
-            {mockDrafts.map((draft) => (
+            {mockDrafts.map((draft, index) => (
               <Card
                 key={draft.id}
-                className="group cursor-pointer transition-all duration-200 hover:shadow-md"
+                className="group cursor-pointer transition-all duration-200 hover:shadow-md hover-scale animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardContent className="flex items-center gap-4 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">

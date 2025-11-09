@@ -196,6 +196,15 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
+  
+  /* Hover Scale Animation */
+  .hover-scale {
+    transition: transform 200ms ease-out;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
 }
 
 /* Animation Keyframes */

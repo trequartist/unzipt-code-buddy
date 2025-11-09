@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
@@ -68,10 +68,17 @@ interface Audience {
 }
 
 export default function Strategy() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const activeView = searchParams.get("view") || "calendar";
+  
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [activeTab, setActiveTab] = useState("calendar");
   const [isAddingCampaign, setIsAddingCampaign] = useState(false);
   const [isAddingAudience, setIsAddingAudience] = useState(false);
+
+  const setActiveView = (view: string) => {
+    navigate(`/strategy?view=${view}`, { replace: true });
+  };
 
   // Mock data
   const [contentItems] = useState<ContentItem[]>([
@@ -175,10 +182,17 @@ export default function Strategy() {
     );
   };
 
+  const navItems = [
+    { id: "calendar", label: "Calendar", icon: CalendarIcon },
+    { id: "campaigns", label: "Campaigns", icon: Megaphone },
+    { id: "pipeline", label: "Pipeline", icon: TrendingUp },
+    { id: "audience", label: "Audience", icon: Target },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-scale-in">
         <div>
           <h1 className="text-4xl font-bold mb-2">Strategy</h1>
           <p className="text-muted-foreground">
@@ -186,42 +200,43 @@ export default function Strategy() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 hover-scale">
             <BarChart3 className="h-4 w-4" />
             Analytics
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2 hover-scale">
             <Plus className="h-4 w-4" />
             New Campaign
           </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="calendar" className="gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            Calendar
-          </TabsTrigger>
-          <TabsTrigger value="campaigns" className="gap-2">
-            <Megaphone className="h-4 w-4" />
-            Campaigns
-          </TabsTrigger>
-          <TabsTrigger value="pipeline" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Pipeline
-          </TabsTrigger>
-          <TabsTrigger value="audience" className="gap-2">
-            <Target className="h-4 w-4" />
-            Audience
-          </TabsTrigger>
-        </TabsList>
+      {/* Navigation Tabs */}
+      <div className="flex gap-2 border-b border-border">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveView(item.id)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all",
+              "hover:bg-accent hover:text-accent-foreground",
+              "border-b-2 -mb-px",
+              activeView === item.id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Calendar View */}
-        <TabsContent value="calendar" className="space-y-4">
+      {/* Calendar View */}
+      {activeView === "calendar" && (
+        <div className="space-y-4 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 p-6">
+            <Card className="lg:col-span-2 p-6 hover:shadow-lg transition-shadow">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -231,7 +246,7 @@ export default function Strategy() {
             </Card>
 
             <div className="space-y-4">
-              <Card className="p-4">
+              <Card className="p-4 hover:shadow-lg transition-shadow">
                 <h3 className="font-semibold mb-3">
                   {format(selectedDate, "MMMM d, yyyy")}
                 </h3>
@@ -246,7 +261,7 @@ export default function Strategy() {
                     .map((item) => (
                       <div
                         key={item.id}
-                        className="p-3 rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
+                        className="p-3 rounded-lg border border-border hover:border-primary hover:shadow-md transition-all cursor-pointer animate-scale-in"
                       >
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <p className="font-medium text-sm">{item.title}</p>
@@ -271,17 +286,19 @@ export default function Strategy() {
                     </p>
                   )}
                 </div>
-                <Button variant="outline" className="w-full mt-4 gap-2">
+                <Button variant="outline" className="w-full mt-4 gap-2 hover-scale">
                   <Plus className="h-4 w-4" />
                   Schedule Content
                 </Button>
               </Card>
             </div>
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Campaigns View */}
-        <TabsContent value="campaigns" className="space-y-4">
+      {/* Campaigns View */}
+      {activeView === "campaigns" && (
+        <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold">Campaigns</h2>
@@ -291,12 +308,12 @@ export default function Strategy() {
             </div>
             <Dialog open={isAddingCampaign} onOpenChange={setIsAddingCampaign}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button className="gap-2 hover-scale">
                   <Plus className="h-4 w-4" />
                   New Campaign
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="animate-scale-in">
                 <DialogHeader>
                   <DialogTitle>Create New Campaign</DialogTitle>
                   <DialogDescription>
@@ -355,7 +372,7 @@ export default function Strategy() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {campaigns.map((campaign) => (
-              <Card key={campaign.id} className="p-6 hover:shadow-lg transition-shadow">
+              <Card key={campaign.id} className="p-6 hover:shadow-lg transition-all hover-scale cursor-pointer">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -404,20 +421,22 @@ export default function Strategy() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1 hover-scale">
                     View Details
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1 hover-scale">
                     Add Content
                   </Button>
                 </div>
               </Card>
             ))}
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Pipeline View */}
-        <TabsContent value="pipeline" className="space-y-4">
+      {/* Pipeline View */}
+      {activeView === "pipeline" && (
+        <div className="space-y-4 animate-fade-in">
           <div className="mb-4">
             <h2 className="text-2xl font-bold">Content Pipeline</h2>
             <p className="text-sm text-muted-foreground">
@@ -433,7 +452,7 @@ export default function Strategy() {
               { status: "scheduled", label: "Scheduled", count: 1 },
               { status: "published", label: "Published", count: 0 },
             ].map((stage) => (
-              <Card key={stage.status} className="p-4">
+              <Card key={stage.status} className="p-4 hover:shadow-lg transition-shadow animate-scale-in">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(stage.status as ContentItem["status"])}
@@ -448,7 +467,7 @@ export default function Strategy() {
                     .map((item) => (
                       <div
                         key={item.id}
-                        className="p-3 rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
+                        className="p-3 rounded-lg border border-border hover:border-primary hover:shadow-md transition-all cursor-pointer"
                       >
                         <p className="font-medium text-sm mb-1">{item.title}</p>
                         <div className="flex items-center gap-2">
@@ -465,17 +484,19 @@ export default function Strategy() {
                     ))}
                 </div>
 
-                <Button variant="ghost" size="sm" className="w-full mt-3 gap-1">
+                <Button variant="ghost" size="sm" className="w-full mt-3 gap-1 hover-scale">
                   <Plus className="h-3 w-3" />
                   Add Content
                 </Button>
               </Card>
             ))}
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Audience View */}
-        <TabsContent value="audience" className="space-y-4">
+      {/* Audience View */}
+      {activeView === "audience" && (
+        <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold">Target Audiences</h2>
@@ -485,12 +506,12 @@ export default function Strategy() {
             </div>
             <Dialog open={isAddingAudience} onOpenChange={setIsAddingAudience}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button className="gap-2 hover-scale">
                   <Plus className="h-4 w-4" />
                   New Audience
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="animate-scale-in">
                 <DialogHeader>
                   <DialogTitle>Create Audience Segment</DialogTitle>
                   <DialogDescription>
@@ -504,34 +525,36 @@ export default function Strategy() {
                   </div>
                   <div className="space-y-2">
                     <Label>Demographics</Label>
-                    <Input placeholder="Age range, location, industry, etc." />
+                    <Textarea
+                      placeholder="Describe age, location, job roles..."
+                      rows={2}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Interests & Behaviors</Label>
                     <Textarea
-                      placeholder="Key interests, pain points, content preferences..."
-                      rows={3}
+                      placeholder="What are their interests and pain points?"
+                      rows={2}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Estimated Size</Label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
+                        <SelectValue placeholder="Select size range" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="small">Small (0-50K)</SelectItem>
-                        <SelectItem value="medium">Medium (50K-250K)</SelectItem>
-                        <SelectItem value="large">Large (250K+)</SelectItem>
+                        <SelectItem value="1">0-10K</SelectItem>
+                        <SelectItem value="2">10K-50K</SelectItem>
+                        <SelectItem value="3">50K-100K</SelectItem>
+                        <SelectItem value="4">100K-250K</SelectItem>
+                        <SelectItem value="5">250K+</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddingAudience(false)}
-                  >
+                  <Button variant="outline" onClick={() => setIsAddingAudience(false)}>
                     Cancel
                   </Button>
                   <Button onClick={() => setIsAddingAudience(false)}>
@@ -544,17 +567,15 @@ export default function Strategy() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {audiences.map((audience) => (
-              <Card key={audience.id} className="p-6 hover:shadow-lg transition-shadow">
+              <Card key={audience.id} className="p-6 hover:shadow-lg transition-all hover-scale cursor-pointer">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <Users className="h-5 w-5 text-primary" />
+                      <Target className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <h3 className="font-semibold">{audience.name}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {audience.size} reach
-                      </p>
+                      <p className="text-sm text-muted-foreground">{audience.size}</p>
                     </div>
                   </div>
                 </div>
@@ -568,11 +589,11 @@ export default function Strategy() {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-2">
-                      Key Interests
+                      Interests
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {audience.interests.map((interest, idx) => (
-                        <Badge key={idx} variant="secondary">
+                    <div className="flex flex-wrap gap-1">
+                      {audience.interests.map((interest) => (
+                        <Badge key={interest} variant="secondary" className="text-xs">
                           {interest}
                         </Badge>
                       ))}
@@ -581,18 +602,18 @@ export default function Strategy() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Edit
+                  <Button variant="outline" size="sm" className="flex-1 hover-scale">
+                    Edit Segment
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1 hover-scale">
                     View Content
                   </Button>
                 </div>
               </Card>
             ))}
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

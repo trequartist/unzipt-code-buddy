@@ -14,6 +14,8 @@ const Create = lazy(() => import("./pages/Create"));
 const Strategy = lazy(() => import("./pages/Strategy"));
 const Intelligence = lazy(() => import("./pages/Intelligence"));
 const Hub = lazy(() => import("./pages/Hub"));
+const Playbooks = lazy(() => import("./pages/Playbooks"));
+const Research = lazy(() => import("./pages/Research"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -72,6 +74,26 @@ function AppContent() {
             <AppShell>
               <Suspense fallback={<LoadingScreen />}>
                 <Hub />
+              </Suspense>
+            </AppShell>
+          }
+        />
+        <Route
+          path="/playbooks"
+          element={
+            <AppShell>
+              <Suspense fallback={<LoadingScreen />}>
+                <Playbooks />
+              </Suspense>
+            </AppShell>
+          }
+        />
+        <Route
+          path="/research"
+          element={
+            <AppShell>
+              <Suspense fallback={<LoadingScreen />}>
+                <Research />
               </Suspense>
             </AppShell>
           }
