@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useWorkflowStore } from "@/stores/workflowStore";
+import { WorkflowContainer } from "@/components/workflow/WorkflowContainer";
+import { ContentEditor } from "@/components/editor/ContentEditor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,14 +56,22 @@ const mockDrafts = [
 ];
 
 export default function Create() {
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
+  const { isActive, startWorkflow, currentStageIndex, stages } = useWorkflowStore();
 
-  const startWorkflow = (workflowId: string) => {
-    setSelectedWorkflow(workflowId);
-    // TODO: Navigate to workflow execution
-    console.log("Starting workflow:", workflowId);
-  };
+  // Check if we're in editor mode (last stage)
+  const isEditorMode = isActive && currentStageIndex === stages.length - 1;
 
+  // If workflow is active and not in editor mode, show workflow container
+  if (isActive && !isEditorMode) {
+    return <WorkflowContainer />;
+  }
+
+  // If in editor mode, show editor
+  if (isEditorMode) {
+    return <ContentEditor />;
+  }
+
+  // Otherwise show workflow selection screen
   return (
     <div className="space-y-12 animate-fade-in">
       {/* Header */}
@@ -82,7 +92,7 @@ export default function Create() {
               <Card
                 key={workflow.id}
                 className="group cursor-pointer transition-all duration-200 hover:-translate-y-1"
-                onClick={() => startWorkflow(workflow.id)}
+                onClick={() => startWorkflow(workflow.id as "blog" | "linkedin" | "calendar")}
               >
                 <CardHeader className="space-y-3">
                   <div className="flex items-start justify-between">
