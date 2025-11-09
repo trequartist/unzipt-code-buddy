@@ -8,7 +8,6 @@ import {
   Eye,
   Download,
   Share2,
-  Sparkles,
   FileText,
   FileCode,
   Hash,
@@ -19,10 +18,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useWorkflowStore } from "@/stores/workflowStore";
 import { useToast } from "@/hooks/use-toast";
+import novel from "novel";
 
 export function ContentEditor() {
   const { editorTitle, editorContent, updateEditorTitle, updateEditorContent } = useWorkflowStore();
@@ -55,17 +54,17 @@ export function ContentEditor() {
     }
   }, [isSaved, content, updateEditorContent, toast]);
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
+  const handleEditorUpdate = (editor?: { getHTML: () => string; getText: () => string }) => {
+    if (!editor) return;
+    const html = editor.getHTML();
+    setContent(html);
+    updateEditorContent(html);
     setIsSaved(false);
-  };
-
-  const applyFormat = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    const editorDiv = document.getElementById("rich-editor");
-    if (editorDiv) {
-      handleContentChange(editorDiv.innerHTML);
-    }
+    
+    // Update counts
+    const text = editor.getText();
+    setCharCount(text.length);
+    setWordCount(text.split(/\s+/).filter(Boolean).length);
   };
 
   const handleExport = (format: "markdown" | "html" | "text") => {
@@ -114,13 +113,6 @@ export function ContentEditor() {
     });
   };
 
-  const handleAICommand = (command: string) => {
-    toast({
-      title: "AI Feature",
-      description: `${command} - Coming soon with AI integration`,
-    });
-  };
-
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Brief Header */}
@@ -159,130 +151,20 @@ export function ContentEditor() {
         />
       </div>
 
-      {/* Editor Toolbar */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 rounded-lg border border-border bg-card/95 p-2 backdrop-blur">
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("bold")}
-          >
-            <strong>B</strong>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("italic")}
-          >
-            <em>I</em>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("underline")}
-          >
-            <u>U</u>
-          </Button>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("formatBlock", "<h1>")}
-          >
-            H1
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("formatBlock", "<h2>")}
-          >
-            H2
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("formatBlock", "<h3>")}
-          >
-            H3
-          </Button>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("insertUnorderedList")}
-          >
-            • List
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("insertOrderedList")}
-          >
-            1. List
-          </Button>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => applyFormat("formatBlock", "<blockquote>")}
-          >
-            "
-          </Button>
-        </div>
-
-        <Separator orientation="vertical" className="mx-2 h-6" />
-
-        {/* AI Commands */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1">
-              <Sparkles className="h-4 w-4" />
-              AI
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => handleAICommand("Improve Writing")}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Improve Writing
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAICommand("Make Shorter")}>
-              Shorten
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAICommand("Make Longer")}>
-              Expand
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAICommand("Fix Grammar")}>
-              Fix Grammar
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleAICommand("Change Tone: Professional")}>
-              Tone: Professional
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAICommand("Change Tone: Casual")}>
-              Tone: Casual
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAICommand("Change Tone: Friendly")}>
-              Tone: Friendly
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {wordCount} words • {charCount} characters
-          </span>
-        </div>
+      {/* Editor Toolbar & Stats */}
+      <div className="sticky top-0 z-10 flex items-center justify-end gap-2 rounded-lg border border-border bg-card/95 p-2 backdrop-blur">
+        <span className="text-xs text-muted-foreground">
+          {wordCount} words • {charCount} characters
+        </span>
       </div>
 
-      {/* Rich Text Editor */}
-      <div className="rounded-lg border border-border bg-card p-6">
-        <div
-          id="rich-editor"
-          contentEditable
-          className="prose prose-sm max-w-none min-h-[500px] focus:outline-none"
-          dangerouslySetInnerHTML={{ __html: content }}
-          onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
-          suppressContentEditableWarning
+      {/* Novel Editor with slash commands */}
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <novel.Editor
+          defaultValue={content}
+          onUpdate={handleEditorUpdate}
+          className="min-h-[500px]"
+          disableLocalStorage
         />
       </div>
 
@@ -329,10 +211,6 @@ export function ContentEditor() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Sparkles className="mr-2 h-4 w-4" />
-            SEO Check
-          </Button>
           <Button variant="default" size="sm">
             <Share2 className="mr-2 h-4 w-4" />
             Publish
