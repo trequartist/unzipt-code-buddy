@@ -74,6 +74,13 @@ export function ChatTab({ currentInput, onInsertContent, onUpdateInput }: ChatTa
     const messageText = customPrompt || input;
     if (!messageText.trim()) return;
 
+    // If in input stage and no custom prompt, update the workflow input directly
+    if (isInputStage && !customPrompt && onUpdateInput) {
+      onUpdateInput(messageText);
+      setInput("");
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -104,25 +111,32 @@ export function ChatTab({ currentInput, onInsertContent, onUpdateInput }: ChatTa
 
   return (
     <div className="flex h-full flex-col">
-      {/* Writing Assistant Mode Badge */}
-      {isInputStage && currentInput && (
+      {/* Input Stage Mode */}
+      {isInputStage && (
         <div className="p-4 pb-0">
-          <Card className="p-3 bg-primary/5 border-primary/20">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <div className="flex-1">
-                <div className="text-sm font-medium">Writing Assistant Mode</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {currentInput.length} characters • Active
+          <Card className="p-4 bg-primary/5 border-primary/20">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">Share your content idea</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Type your topic, key ideas, or questions below
+                  </div>
                 </div>
               </div>
+              {currentInput && (
+                <div className="text-xs text-muted-foreground">
+                  {currentInput.length} characters
+                </div>
+              )}
             </div>
           </Card>
         </div>
       )}
 
-      {/* Quick Actions */}
-      {isInputStage && currentInput && (
+      {/* Quick Actions - Only show when there's content */}
+      {isInputStage && currentInput && currentInput.length > 50 && (
         <div className="p-4 pb-2">
           <div className="text-xs font-medium text-muted-foreground mb-2">Quick Actions</div>
           <div className="grid grid-cols-2 gap-2">
@@ -144,15 +158,44 @@ export function ChatTab({ currentInput, onInsertContent, onUpdateInput }: ChatTa
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        {messages.length === 0 && (
+        {messages.length === 0 && !isInputStage && (
           <div className="flex flex-col items-center justify-center h-full text-center p-6">
             <MessageCircle className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
             <h3 className="font-medium mb-2">How can I help you?</h3>
             <p className="text-sm text-muted-foreground">
-              {isInputStage
-                ? "I'm here to help you write better content. Use quick actions or ask me anything."
-                : "Ask me anything about your content workflow."}
+              Ask me anything about your content workflow.
             </p>
+          </div>
+        )}
+        
+        {messages.length === 0 && isInputStage && !currentInput && (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6">
+            <div className="mb-4 p-4 rounded-full bg-primary/10">
+              <svg
+                className="h-12 w-12 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </div>
+            <h3 className="font-semibold mb-2 text-lg">Start typing your content idea</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Share your topic, key points, or questions below.
+              <br />
+              I'll help you create amazing content!
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center mt-4">
+              <Badge variant="secondary" className="text-xs">Blog posts</Badge>
+              <Badge variant="secondary" className="text-xs">LinkedIn updates</Badge>
+              <Badge variant="secondary" className="text-xs">Articles</Badge>
+            </div>
           </div>
         )}
 
@@ -210,20 +253,30 @@ export function ChatTab({ currentInput, onInsertContent, onUpdateInput }: ChatTa
                 handleSend();
               }
             }}
-            placeholder="Ask me anything..."
-            className="min-h-[60px] resize-none"
-            aria-label="Message assistant"
+            placeholder={
+              isInputStage
+                ? "Type your content idea here..."
+                : "Ask me anything..."
+            }
+            className="min-h-[80px] resize-none"
+            aria-label={isInputStage ? "Content input" : "Message assistant"}
+            autoFocus={isInputStage}
           />
           <Button
             onClick={() => handleSend()}
             disabled={!input.trim() || isThinking}
             size="icon"
-            className="h-[60px] w-[60px] shrink-0"
+            className="h-[80px] w-[80px] shrink-0"
             aria-label="Send message"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-5 w-5" />
           </Button>
         </div>
+        {isInputStage && (
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Press Enter to save • Shift+Enter for new line
+          </p>
+        )}
       </div>
     </div>
   );

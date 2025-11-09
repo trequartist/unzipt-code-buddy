@@ -71,36 +71,62 @@ export function WorkflowContainer({ children }: WorkflowContainerProps) {
               </p>
             </div>
 
-            {/* Input Stage */}
+            {/* Input Stage - User provides input via Assistant Panel */}
             {currentStage.type === "input" && (
-              <div className="space-y-4 pt-4">
-                <div className="relative">
-                  <Textarea
-                    placeholder={currentStage.placeholder}
-                    value={currentStage.inputValue || ""}
-                    onChange={(e) =>
-                      updateStageData({ inputValue: e.target.value })
-                    }
-                    rows={10}
-                    maxLength={2000}
-                    className="resize-none text-base"
-                  />
-                  <div className="absolute bottom-3 right-3 text-xs text-muted-foreground">
-                    {currentStage.inputValue?.length || 0} / 2000
+              <div className="pt-8 pb-12 flex flex-col items-center justify-center min-h-[400px]">
+                <div className="max-w-md text-center space-y-6">
+                  <div className="relative inline-flex">
+                    <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-xl" />
+                    <div className="relative bg-primary/10 p-6 rounded-full">
+                      <svg
+                        className="h-16 w-16 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-                {currentStage.allowFileUpload && (
-                  <Card className="flex items-center justify-center border-2 border-dashed p-12 transition-all duration-300 hover:border-primary hover:bg-primary/5">
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Drop files here or click to upload
-                      </p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Supports: {currentStage.acceptedFiles}
-                      </p>
+                  
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold">Ready to create?</h3>
+                    <p className="text-muted-foreground">
+                      Use the <span className="font-semibold text-foreground">ContentQ AI Assistant</span> on the right to share your topic, ideas, or upload supporting documents.
+                    </p>
+                  </div>
+                  
+                  <Card className="p-4 bg-primary/5 border-primary/20">
+                    <div className="flex items-start gap-3 text-left">
+                      <div className="mt-0.5">
+                        <svg
+                          className="h-5 w-5 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-1 space-y-1 text-sm">
+                        <p className="font-medium">Type your content idea in the Chat tab</p>
+                        <p className="text-xs text-muted-foreground">
+                          Or use the Context tab to upload reference documents
+                        </p>
+                      </div>
                     </div>
                   </Card>
-                )}
+                </div>
               </div>
             )}
 
