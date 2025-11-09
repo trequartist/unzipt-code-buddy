@@ -60,6 +60,7 @@ export interface WorkflowState {
   updateEditorContent: (content: string) => void;
   updateEditorTitle: (title: string) => void;
   completeStage: () => void;
+  insertIntoInput: (content: string, position: "replace" | "append" | "prepend") => void;
 }
 
 const blogWorkflowStages: WorkflowStage[] = [
@@ -397,5 +398,29 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
 
     set({ steps: updatedSteps });
+  },
+
+  insertIntoInput: (content, position) => {
+    const { currentStageIndex, stages } = get();
+    const currentStage = stages[currentStageIndex];
+    
+    if (currentStage?.type === "input") {
+      const currentValue = currentStage.inputValue || "";
+      let newValue = "";
+      
+      switch (position) {
+        case "replace":
+          newValue = content;
+          break;
+        case "append":
+          newValue = currentValue + (currentValue ? "\n\n" : "") + content;
+          break;
+        case "prepend":
+          newValue = content + (currentValue ? "\n\n" : "") + currentValue;
+          break;
+      }
+      
+      get().updateStageData({ inputValue: newValue });
+    }
   },
 }));

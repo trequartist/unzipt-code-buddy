@@ -26,6 +26,7 @@ export function WorkflowContainer({ children }: WorkflowContainerProps) {
     previousStage,
     completeStage,
     updateStageData,
+    insertIntoInput,
   } = useWorkflowStore();
 
   const currentStage = stages[currentStageIndex];
@@ -186,7 +187,11 @@ export function WorkflowContainer({ children }: WorkflowContainerProps) {
         {/* Assistant Panel - Fixed Right Sidebar */}
         <aside className="hidden w-[400px] border-l border-border bg-background lg:block">
           <div className="sticky top-0 h-[calc(100vh-60px)]">
-            <AssistantPanel />
+            <AssistantPanel 
+              currentInput={currentStage.type === "input" ? currentStage.inputValue : undefined}
+              onInsertContent={insertIntoInput}
+              onUpdateInput={(newValue) => updateStageData({ inputValue: newValue })}
+            />
           </div>
         </aside>
       </div>
