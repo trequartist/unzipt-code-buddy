@@ -125,6 +125,9 @@ export function AssistantPanel() {
   const currentStage = isActive && stages[currentStageIndex] ? stages[currentStageIndex] : undefined;
   const suggestions = getContextualSuggestions(location.pathname, isActive, currentStage);
   const helpPrompt = getHelpPrompt(location.pathname, currentStage);
+  
+  // Hide input box during workflow input stages (main workflow has its own input)
+  const hideInput = isActive && currentStage?.type === "input";
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -262,33 +265,35 @@ export function AssistantPanel() {
         )}
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border p-4">
-        <div className="flex gap-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Ask me anything..."
-            className="min-h-[60px] resize-none"
-            aria-label="Message assistant"
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || isThinking}
-            size="icon"
-            className="h-[60px] w-[60px] shrink-0"
-            aria-label="Send message"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+      {/* Input - Hidden during workflow input stages */}
+      {!hideInput && (
+        <div className="border-t border-border p-4">
+          <div className="flex gap-2">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Ask me anything..."
+              className="min-h-[60px] resize-none"
+              aria-label="Message assistant"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || isThinking}
+              size="icon"
+              className="h-[60px] w-[60px] shrink-0"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
