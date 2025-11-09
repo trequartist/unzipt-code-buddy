@@ -1,102 +1,99 @@
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { 
-  PenTool, 
-  Target, 
-  TrendingUp, 
-  FolderOpen,
-  Search,
-  User
-} from "lucide-react";
+import { useState } from "react";
+import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-const workspaces = [
-  { name: "Create", path: "/create", icon: PenTool },
-  { name: "Strategy", path: "/strategy", icon: Target },
-  { name: "Intelligence", path: "/intelligence", icon: TrendingUp },
-  { name: "Hub", path: "/hub", icon: FolderOpen },
-];
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { FileText, TrendingUp, Lightbulb, FolderOpen, Menu, Command } from "lucide-react";
 
 export function Navigation() {
-  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { to: "/create", icon: FileText, label: "Create", shortcut: "Ctrl+1" },
+    { to: "/strategy", icon: TrendingUp, label: "Strategy", shortcut: "Ctrl+2" },
+    { to: "/intelligence", icon: Lightbulb, label: "Intelligence", shortcut: "Ctrl+3" },
+    { to: "/hub", icon: FolderOpen, label: "Hub", shortcut: "Ctrl+4" },
+  ];
 
   return (
-    <nav className="flex h-full items-center justify-between px-6">
-      {/* Logo */}
-      <Link 
-        to="/create" 
-        className="flex items-center gap-2 text-lg font-semibold tracking-tight transition-colors hover:text-primary"
-      >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          K
+    <nav className="flex h-full items-center justify-between px-4 lg:px-6">
+      <div className="flex items-center gap-4 lg:gap-8">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <span className="text-sm font-bold text-primary-foreground">Q</span>
+          </div>
+          <span className="text-lg font-bold">ContentQ</span>
         </div>
-        <span className="hidden sm:inline">KiwiQ</span>
-      </Link>
 
-      {/* Primary Navigation */}
-      <div className="flex items-center gap-1">
-        {workspaces.map((workspace) => {
-          const Icon = workspace.icon;
-          const isActive = location.pathname.startsWith(workspace.path);
-          
-          return (
-            <Link
-              key={workspace.path}
-              to={workspace.path}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex items-center gap-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
             >
-              <Icon className="h-4 w-4" />
-              <span className="hidden md:inline">{workspace.name}</span>
-            </Link>
-          );
-        })}
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2">
-        {/* Command Palette Trigger */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
-          onClick={() => {
-            // TODO: Implement command palette
-            console.log("Open command palette");
-          }}
-        >
-          <Search className="h-4 w-4" />
-          <kbd className="hidden rounded bg-muted px-2 py-0.5 text-xs font-mono lg:inline-block">
-            ⌘K
-          </kbd>
-        </Button>
+      {/* Desktop Command Palette Hint */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="hidden lg:flex items-center gap-2"
+        onClick={() => {
+          const event = new KeyboardEvent("keydown", {
+            key: "k",
+            ctrlKey: true,
+            bubbles: true,
+          });
+          document.dispatchEvent(event);
+        }}
+      >
+        <Command className="h-4 w-4" />
+        <span className="text-xs">Ctrl+K</span>
+      </Button>
 
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                <User className="h-4 w-4" />
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {/* Mobile Menu */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetTrigger asChild className="lg:hidden">
+          <Button variant="ghost" size="icon" aria-label="Open menu">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[280px]">
+          <SheetHeader>
+            <SheetTitle>Navigation</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 flex flex-col gap-2">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </div>
+                <kbd className="hidden sm:inline-block pointer-events-none text-[10px] text-muted-foreground">
+                  {item.shortcut}
+                </kbd>
+              </NavLink>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </nav>
   );
 }

@@ -276,12 +276,14 @@ export function AssistantPanel() {
             }}
             placeholder="Ask me anything..."
             className="min-h-[60px] resize-none"
+            aria-label="Message assistant"
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isThinking}
             size="icon"
             className="h-[60px] w-[60px] shrink-0"
+            aria-label="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>

@@ -1,4 +1,18 @@
-# Welcome to your Lovable project
+# ContentQ - AI-Powered Content Creation Platform
+
+ContentQ is a comprehensive content creation and management platform with AI assistance, workflow automation, and analytics.
+
+## ✨ Key Features
+
+- **Create Workspace**: Multi-stage workflows, rich text editor, AI commands
+- **Strategy Workspace**: Content calendar, campaign planning, audience targeting
+- **Intelligence Workspace**: Analytics dashboards, performance metrics, AI insights
+- **Hub Workspace**: Content library, advanced search, bulk operations
+- **AI Assistant**: Context-aware help, workflow guidance
+- **Keyboard Shortcuts**: Full keyboard navigation (Ctrl+K for command palette)
+- **Mobile Responsive**: Works beautifully on all devices
+
+See [KEYBOARD_SHORTCUTS.md](./KEYBOARD_SHORTCUTS.md) for complete shortcut reference.
 
 ## Project info
 

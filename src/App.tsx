@@ -1,34 +1,105 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
-import Create from "./pages/Create";
-import Strategy from "./pages/Strategy";
-import Intelligence from "./pages/Intelligence";
-import Hub from "./pages/Hub";
-import NotFound from "./pages/NotFound";
+import { CommandPalette } from "./components/CommandPalette";
+import { LoadingScreen } from "./components/LoadingScreen";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
-const queryClient = new QueryClient();
+// Lazy load pages for better performance
+const Create = lazy(() => import("./pages/Create"));
+const Strategy = lazy(() => import("./pages/Strategy"));
+const Intelligence = lazy(() => import("./pages/Intelligence"));
+const Hub = lazy(() => import("./pages/Hub"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function AppContent() {
+  useKeyboardShortcuts();
+
+  return (
+    <>
+      <CommandPalette />
+      <Routes>
+        <Route path="/" element={<Navigate to="/create" replace />} />
+        <Route
+          path="/create"
+          element={
+            <AppShell>
+              <Suspense fallback={<LoadingScreen />}>
+                <Create />
+              </Suspense>
+            </AppShell>
+          }
+        />
+        <Route
+          path="/strategy"
+          element={
+            <AppShell>
+              <Suspense fallback={<LoadingScreen />}>
+                <Strategy />
+              </Suspense>
+            </AppShell>
+          }
+        />
+        <Route
+          path="/intelligence"
+          element={
+            <AppShell>
+              <Suspense fallback={<LoadingScreen />}>
+                <Intelligence />
+              </Suspense>
+            </AppShell>
+          }
+        />
+        <Route
+          path="/hub"
+          element={
+            <AppShell>
+              <Suspense fallback={<LoadingScreen />}>
+                <Hub />
+              </Suspense>
+            </AppShell>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<LoadingScreen />}>
+              <NotFound />
+            </Suspense>
+          }
+        />
+      </Routes>
+    </>
+  );
+}
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/create" replace />} />
-          <Route path="/create" element={<AppShell><Create /></AppShell>} />
-          <Route path="/strategy" element={<AppShell><Strategy /></AppShell>} />
-          <Route path="/intelligence" element={<AppShell><Intelligence /></AppShell>} />
-          <Route path="/hub" element={<AppShell><Hub /></AppShell>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
